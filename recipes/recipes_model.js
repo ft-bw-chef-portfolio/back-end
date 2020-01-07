@@ -1,6 +1,7 @@
 const db = require("../data/db-config.js");
 
 module.exports = {
+  addRecipe,
   getRecipes,
   getChefs,
   getMealTypes,
@@ -13,9 +14,9 @@ module.exports = {
   // getInstructions
 }
 
-// select * from recipes as r
-// join ingredients as ing
-// on r.id = ing.recipe_id
+function addRecipe(recipe) {
+  return db('recipes').insert(recipe)
+};
 
 
 function getRecipes() {

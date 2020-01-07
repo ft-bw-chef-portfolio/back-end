@@ -2,8 +2,28 @@ const express = require('express');
 
 const db = require("../data/db-config.js");
 const Recipes = require('./recipes_model.js');
+const authenticate = require('../auth/authenticate-middleware')
 
 const router = express.Router();
+
+router.post('/recipes', authenticate, (req, res) => {
+  // const newRecipe = req.body;
+  const newRecipe = {
+    chef_id: Number(req.token.subject),
+    meal_type_id: req.body.meal_type_id,
+    title: req.body.title,
+    image: req.body.image
+  };
+  
+  Recipes.addRecipe(newRecipe)
+  .then(recipe => {
+    console.log('chef id', req.token.subject)
+    res.json(recipe);
+  })
+  .catch(err => {
+    res.status(500).json({ message: 'Failed to add recipes 456' });
+  });
+});
 
 router.get('/recipes', (req, res) => {
   Recipes.getRecipes()
