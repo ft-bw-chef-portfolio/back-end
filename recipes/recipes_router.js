@@ -29,6 +29,7 @@ const router = express.Router();
 
 
 // CREATE RECIPE WITH INGREDIENTS AND INSTRUCTIONS
+
 router.post('/recipes', authenticate, (req, res) => {
   db.transaction(function(trx) {
 
@@ -46,14 +47,14 @@ router.post('/recipes', authenticate, (req, res) => {
       .insert(newRecipe, 'id')
       .into('recipes')
       .then(function(ids) {
-        if (ingredients) {
-          ingredients.forEach((ingredient) => ingredient.recipe_id = ids[0]);
-          return trx('ingredients').insert(ingredients);
-        } 
-        if (instructions) {
-          instructions.forEach((instruction) => instruction.recipe_id = ids2[0]);
-          return trx('instructions').insert(instructions);          
-        }
+        ingredients.forEach((ingredient) => ingredient.recipe_id = ids[0]);
+        // console.log('ingredients', ingredients)
+        return trx('ingredients').insert(ingredients);
+      })
+      .then(function(ids) {
+        instructions.forEach((instruction) => instruction.recipe_id = ingredients.map(ing => ing.recipe_id)[0]);
+        // console.log('ingredients', ingredients)
+        return trx('instructions').insert(instructions);              
       })
   })
   .then(function(inserts) {
@@ -66,7 +67,6 @@ router.post('/recipes', authenticate, (req, res) => {
     console.error(error);
   });
 });
-
 
 router.get('/recipes', (req, res) => {
   Recipes.getRecipes()
@@ -107,7 +107,7 @@ router.get('/recipes/:id', async (req, res) => {
   const ingredients = await Recipes.getIngredientsByRecipeId(id)
   const instructions = await Recipes.getInstructionsByRecipeId(id)
 
-  console.log('test', meal_type.find(mt => (recipe.map(r => r.meal_type_id)[0] === mt.id)))
+  // console.log('test', meal_type.find(mt => (recipe.map(r => r.meal_type_id)[0] === mt.id)))
 
   try{
     const mapIngredientsToRecipe = {
