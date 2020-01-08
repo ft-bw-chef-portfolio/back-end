@@ -49,28 +49,17 @@ function getMealTypes() {
 
 function getRecipesById(id) {
   return db("recipes as r")
-  // .join('ingredients as ing', 'r.id', 'ing.recipe_id' )
-  // .select('ing.name')
   .where('r.id', id);
 }
 
 function getIngredientsByRecipeId(id) {
   return db("ingredients as ing")
-  // .join('ingredients as ing', 'r.id', 'ing.recipe_id' )
-  .select('ing.name')
+  .select('ing.id', 'ing.name')
   .where('ing.recipe_id', id);
 }
 
 function getInstructionsByRecipeId(id) {
   return db("instructions as ins")
-  .select('ins.description')
+  .select('ins.id', 'ins.position', 'ins.description')
   .where('ins.recipe_id', id);
 }
-
-// function getShoppingList(recipe_id) {
-//   return db("recipe_ingredients").where({recipe_id}).first();
-// }
-
-// function getInstructions(recipe_id) {
-//   return db("instructions").where({recipe_id}).first();
-// }

@@ -6,24 +6,67 @@ const authenticate = require('../auth/authenticate-middleware')
 
 const router = express.Router();
 
-router.post('/recipes', authenticate, (req, res) => {
-  // const newRecipe = req.body;
-  const newRecipe = {
-    chef_id: Number(req.token.subject),
-    meal_type_id: req.body.meal_type_id,
-    title: req.body.title,
-    image: req.body.image
-  };
+// CREATE NAEKD RECIPES
+// router.post('/recipes', authenticate, (req, res) => {
+//   // const newRecipe = req.body;
+//   const newRecipe = {
+//     chef_id: Number(req.token.subject),
+//     meal_type_id: req.body.meal_type_id,
+//     title: req.body.title,
+//     image: req.body.image,
+//     ingredients: req.body.ingredients
+//   };
   
-  Recipes.addRecipe(newRecipe)
-  .then(recipe => {
-    console.log('chef id', req.token.subject)
-    res.json(recipe);
+//   Recipes.addRecipe(newRecipe)
+//   .then(recipe => {
+//     console.log('recipe', recipe)
+//     res.json({id: recipe[0]});
+//   })
+//   .catch(err => {
+//     res.status(500).json({ message: 'Failed to add recipes' });
+//   });
+// });
+
+
+// CREATE RECIPE WITH INGREDIENTS AND INSTRUCTIONS
+router.post('/recipes', authenticate, (req, res) => {
+  db.transaction(function(trx) {
+
+    const newRecipe = {
+      chef_id: Number(req.token.subject),
+      meal_type_id: req.body.meal_type_id,
+      title: req.body.title,
+      image: req.body.image
+    };
+
+    const ingredients = req.body.ingredients;
+    const instructions = req.body.instructions;
+  
+    return trx
+      .insert(newRecipe, 'id')
+      .into('recipes')
+      .then(function(ids) {
+        if (ingredients) {
+          ingredients.forEach((ingredient) => ingredient.recipe_id = ids[0]);
+          return trx('ingredients').insert(ingredients);
+        } 
+        if (instructions) {
+          instructions.forEach((instruction) => instruction.recipe_id = ids2[0]);
+          return trx('instructions').insert(instructions);          
+        }
+      })
   })
-  .catch(err => {
-    res.status(500).json({ message: 'Failed to add recipes 456' });
+  .then(function(inserts) {
+    console.log(inserts.length + ' new ingredients saved.');
+    res.json({message: 'new recipe created'});
+  })
+  .catch(function(error) {
+    // If we get here, that means that neither the 'Old ingredients' recipes insert,
+    // nor any of the ingredients inserts will have taken place.
+    console.error(error);
   });
 });
+
 
 router.get('/recipes', (req, res) => {
   Recipes.getRecipes()
@@ -85,18 +128,6 @@ router.get('/recipes/:id', async (req, res) => {
   } catch(err) {
     res.status(500).json({ message: 'Failed to get recipes' });
   }
-
-
-  // .then(recipe => {
-  //   if (recipe) {
-  //     res.json(recipe);
-  //   } else {
-  //     res.status(404).json({ message: 'Could not find recipe with given id.' })
-  //   }
-  // })
-  // .catch(err => {
-  //   res.status(500).json({ message: 'Failed to get recipes' });
-  // });
 });
 
 
@@ -107,6 +138,22 @@ router.get('/recipes/:id/ingredients', (req, res) => {
   .then(ing => {
     if (ing) {
       res.json(ing);
+    } else {
+      res.status(404).json({ message: 'Could not find recipe with given id.' })
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: 'Failed to get recipes' });
+  });
+});
+
+router.get('/recipes/:id/instructions', (req, res) => {
+  const { id } = req.params;
+
+  Recipes.getInstructionsByRecipeId(id)
+  .then(ins => {
+    if (ins) {
+      res.json(ins);
     } else {
       res.status(404).json({ message: 'Could not find recipe with given id.' })
     }
