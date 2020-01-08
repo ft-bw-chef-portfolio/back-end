@@ -59,13 +59,19 @@ router.get('/recipes/:id', async (req, res) => {
   const { id } = req.params;
   
   const recipe = await Recipes.getRecipesById(id)
+  const chef = await Recipes.getChefs(id)
+  const meal_type = await Recipes.getMealTypes(id)
   const ingredients = await Recipes.getIngredientsByRecipeId(id)
   const instructions = await Recipes.getInstructionsByRecipeId(id)
+
+  console.log('test', meal_type.find(mt => (recipe.map(r => r.meal_type_id)[0] === mt.id)))
 
   try{
     const mapIngredientsToRecipe = {
       id: recipe.map(r => r.id)[0],
       title: recipe.map(r => r.title)[0],
+      chef: chef.find(ch => (recipe.map(r => r.chef_id)[0] === ch.id)),
+      meal_type: meal_type.find(mt => (recipe.map(r => r.meal_type_id)[0] === mt.id)).name,
       image: recipe.map(r => r.image)[0],
       ingredients: ingredients.map(ing => ing.name),
       instructions: instructions.map(ins => ins.description)
