@@ -9,10 +9,8 @@ module.exports = {
   getRecipesByChefId,
   getIngredientsByRecipeId,
   getInstructionsByRecipeId,
-  // getIngredients,
-  // getInstructions,
-  // getShoppingList,
-  // getInstructions
+  removeRecipe,
+  updateRecipe
 }
 
 function addRecipe(recipe) {
@@ -32,22 +30,6 @@ function getMealTypes() {
   return db("meal_types");
 }
 
-// function getIngredients() {
-//   return db("ingredients");
-// }
-
-// function getInstructions() {
-//   return db("instructions");
-// }
-
-// function getRecipes() {
-//   return db("recipes");
-// }
-
-// function getRecipes() {
-//   return db("recipes");
-// }
-
 function getRecipesById(id) {
   return db("recipes as r")
   .where('r.id', id);
@@ -58,11 +40,9 @@ function getIngredientsByRecipeId(id) {
   .select('ing.id', 'ing.name')
   .where('ing.recipe_id', id);
 }
-getRecipesByChefId
 
 function getRecipesByChefId(id) {
   return db("recipes as r")
-  // .select(*)
   .where('r.chef_id', id);
 }
 
@@ -70,4 +50,22 @@ function getInstructionsByRecipeId(id) {
   return db("instructions as ins")
   .select('ins.id', 'ins.position', 'ins.description')
   .where('ins.recipe_id', id);
+}
+
+function updateRecipe(changes, id) {
+  return db("recipes")
+  .where({id})
+  .update(changes)
+  .then(recipe => {
+    return recipe
+  })
+}
+
+function removeRecipe(id) {
+  return db("recipes")
+  .where({id})
+  .delete()
+  .then(recipe => {
+    return null
+  })
 }

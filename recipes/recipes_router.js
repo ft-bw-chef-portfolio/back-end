@@ -78,6 +78,43 @@ router.get('/recipes', (req, res) => {
   });
 });
 
+// DELETE RECIPE
+router.delete('/recipes/:id', (req, res) => {
+  const { id } = req.params;
+  Recipes.removeRecipe(id)
+  .then(deleted => {
+    if (deleted) {
+      res.json({ removed: deleted });
+    } else {
+      res.status(404).json({ message: 'Could not find recipe with given id' });
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: 'Failed to delete recipe' });
+  });
+});
+
+// UPDATE RECIPE
+router.put('/recipes/:id', (req, res) => {
+  const { id } = req.params;
+  const changes = req.body;
+  Recipes.getRecipesById(id)
+  .then(recipe => {
+    if (recipe) {
+      Recipes.updateRecipe(changes, id)
+      .then(updatedRecipe => {
+        res.json(updatedRecipe);
+      });
+    } else {
+      res.status(404).json({ message: 'Could not find recipe with given id' });
+    }
+  })
+  .catch (err => {
+    res.status(500).json({ message: 'Failed to update recipe' });
+  });
+});
+
+// GET CHEFS
 router.get('/chefs', (req, res) => {
   Recipes.getChefs()
   .then(chefs => {
