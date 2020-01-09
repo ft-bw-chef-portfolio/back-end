@@ -10,7 +10,13 @@ module.exports = {
   getIngredientsByRecipeId,
   getInstructionsByRecipeId,
   removeRecipe,
-  updateRecipe
+  updateRecipe,
+  getIngredientByIdByRecipeId,
+  updateIngredient,
+  removeIngredient,
+  getInstructionByIdByRecipeId,
+  updateInstruction,
+  removeInstruction,
 }
 
 function addRecipe(recipe) {
@@ -39,6 +45,58 @@ function getIngredientsByRecipeId(id) {
   return db("ingredients as ing")
   .select('ing.id', 'ing.name')
   .where('ing.recipe_id', id);
+}
+
+// UPDATE DELETE INGREDIENTS
+function getIngredientByIdByRecipeId(recipe_id, ing_id) {
+  return db("ingredients as ing")
+  .select('ing.id', 'ing.name')
+  .where('ing.recipe_id', recipe_id)
+  .where('ing.id', ing_id)
+}
+
+function updateIngredient(changes, id) {
+  return db("ingredients")
+  .where({id})
+  .update(changes)
+  .then(ingredient => {
+    return ingredient
+  })
+}
+
+function removeIngredient(id) {
+  return db("ingredients")
+  .where({id})
+  .delete()
+  .then(ingredient => {
+    return null
+  })
+}
+
+// UPDATE DELETE INSTRUCTIONS
+function getInstructionByIdByRecipeId(recipe_id, ins_id) {
+  return db("instructions as ins")
+  .select('ins.id', 'ins.position', 'ins.description')
+  .where('ins.recipe_id', recipe_id)
+  .where('ins.id', ins_id)
+}
+
+function updateInstruction(changes, id) {
+  return db("instructions")
+  .where({id})
+  .update(changes)
+  .then(instruction => {
+    return instruction
+  })
+}
+
+function removeInstruction(id) {
+  return db("instructions")
+  .where({id})
+  .delete()
+  .then(instruction => {
+    return null
+  })
 }
 
 function getRecipesByChefId(id) {

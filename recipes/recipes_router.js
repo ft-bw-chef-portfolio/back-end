@@ -29,7 +29,6 @@ const router = express.Router();
 
 
 // CREATE RECIPE WITH INGREDIENTS AND INSTRUCTIONS
-
 router.post('/recipes', authenticate, (req, res) => {
   db.transaction(function(trx) {
 
@@ -39,7 +38,6 @@ router.post('/recipes', authenticate, (req, res) => {
       title: req.body.title,
       image: req.body.image
     };
-
     const ingredients = req.body.ingredients;
     const instructions = req.body.instructions;
   
@@ -63,16 +61,14 @@ router.post('/recipes', authenticate, (req, res) => {
       })
   })
   .then(function(inserts) {
-    // console.log(inserts.length + ' new ingredients saved.');
     res.json({message: 'new recipe created'});
   })
   .catch(function(error) {
-    // If we get here, that means that neither the 'Old ingredients' recipes insert,
-    // nor any of the ingredients inserts will have taken place.
     console.error(error);
   });
 });
 
+// GET RECIPE LIST
 router.get('/recipes', (req, res) => {
   Recipes.getRecipes()
   .then(recipes => {
@@ -84,7 +80,7 @@ router.get('/recipes', (req, res) => {
 });
 
 // DELETE RECIPE
-router.delete('/recipes/:id', (req, res) => {
+router.delete('/recipes/:id', authenticate, (req, res) => {
   const { id } = req.params;
   Recipes.removeRecipe(id)
   .then(deleted => {
@@ -100,7 +96,7 @@ router.delete('/recipes/:id', (req, res) => {
 });
 
 // UPDATE RECIPE
-router.put('/recipes/:id', (req, res) => {
+router.put('/recipes/:id', authenticate, (req, res) => {
   const { id } = req.params;
   const changes = req.body;
   Recipes.getRecipesById(id)
@@ -119,6 +115,24 @@ router.put('/recipes/:id', (req, res) => {
   });
 });
 
+// // DELETE INGREDIENT
+// router.delete('/recipes/:id', (req, res) => {
+//   const { id } = req.params;
+//   Recipes.removeRecipe(id)
+//   .then(deleted => {
+//     if (deleted) {
+//       res.json({ removed: deleted });
+//     } else {
+//       res.status(404).json({ message: 'Could not find recipe with given id' });
+//     }
+//   })
+//   .catch(err => {
+//     res.status(500).json({ message: 'Failed to delete recipe' });
+//   });
+// });
+
+
+
 // GET CHEFS
 router.get('/chefs', (req, res) => {
   Recipes.getChefs()
@@ -130,6 +144,7 @@ router.get('/chefs', (req, res) => {
   });
 });
 
+// GET RECIPE LIST BY CHEF
 router.get('/chefs/:id/recipes', (req, res) => {
   const { id } = req.params;
 
@@ -146,7 +161,7 @@ router.get('/chefs/:id/recipes', (req, res) => {
   });
 });
 
-
+// GET MEAL TYPES
 router.get('/meal_types', (req, res) => {
   Recipes.getMealTypes()
   .then(mealtypes => {
@@ -157,16 +172,14 @@ router.get('/meal_types', (req, res) => {
   });
 });
 
+// GET RECIPE DETAILS
 router.get('/recipes/:id', async (req, res) => {
   const { id } = req.params;
-  
   const recipe = await Recipes.getRecipesById(id)
   const chef = await Recipes.getChefs(id)
   const meal_type = await Recipes.getMealTypes(id)
   const ingredients = await Recipes.getIngredientsByRecipeId(id)
   const instructions = await Recipes.getInstructionsByRecipeId(id)
-
-  // console.log('test', meal_type.find(mt => (recipe.map(r => r.meal_type_id)[0] === mt.id)))
 
   try{
     const mapIngredientsToRecipe = {
@@ -189,7 +202,7 @@ router.get('/recipes/:id', async (req, res) => {
   }
 });
 
-
+// GET INGREDIENTS FROM RECIPE
 router.get('/recipes/:id/ingredients', (req, res) => {
   const { id } = req.params;
 
@@ -206,6 +219,130 @@ router.get('/recipes/:id/ingredients', (req, res) => {
   });
 });
 
+
+// GET INGREDIENT DETAIL FROM RECIPE
+router.get('/recipes/:recipe_id/ingredients/:ing_id', (req, res) => {
+  const recipe_id = req.params.recipe_id;
+  const ing_id = req.params.ing_id;
+
+  Recipes.getIngredientByIdByRecipeId(recipe_id, ing_id)
+  .then(ing => {
+    if (ing) {
+      res.json(ing);
+    } else {
+      res.status(404).json({ message: `Could not find ingredient ${ing_id} in recipe ${recipe_id}.` })
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: `Failed to get this ingredient ${ing_id} in recipe ${recipe_id}` });
+  });
+});
+
+// UPDATE INGREDIENT FROM RECIPE
+router.put('/recipes/:recipe_id/ingredients/:ing_id', authenticate, (req, res) => {
+  const recipe_id = req.params.recipe_id;
+  const ing_id = req.params.ing_id;
+  const changes = req.body;
+
+  Recipes.getIngredientByIdByRecipeId(recipe_id, ing_id)
+  .then(ing => {
+    if (ing) {
+      Recipes.updateIngredient(changes, ing_id)
+      .then(updatedIng => {
+        res.json(updatedIng);
+      });
+    } else {
+      res.status(404).json({ message: `Could not update ingredient ${ing_id} in recipe ${recipe_id}.` })
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: `Failed to update this ingredient ${ing_id} in recipe ${recipe_id}` });
+  });
+});
+
+// DELETE INGREDIENT FROM RECIPE
+router.put('/recipes/:recipe_id/ingredients/:ing_id', authenticate,  (req, res) => {
+  const recipe_id = req.params.recipe_id;
+  const ing_id = req.params.ing_id;
+
+  Recipes.getIngredientByIdByRecipeId(recipe_id, ing_id)
+  .then(ing => {
+    if (ing) {
+      Recipes.removeIngredient(ing_id)
+      .then(deletedIng => {
+        res.json(deletedIng);
+      });
+    } else {
+      res.status(404).json({ message: `Could not delete ingredient ${ing_id} in recipe ${recipe_id}.` })
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: `Failed to delete this ingredient ${ing_id} in recipe ${recipe_id}` });
+  });
+});
+
+// GET INSTRUCTION DETAIL FROM RECIPE
+router.get('/recipes/:recipe_id/instructions/:ins_id', (req, res) => {
+  const recipe_id = req.params.recipe_id;
+  const ins_id = req.params.ins_id;
+
+  Recipes.getInstructionByIdByRecipeId(recipe_id, ins_id)
+  .then(ins => {
+    if (ins) {
+      res.json(ins);
+    } else {
+      res.status(404).json({ message: `Could not find instruction ${ins_id} in recipe ${recipe_id}.` })
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: `Failed to get this instruction ${ins_id} in recipe ${recipe_id}` });
+  });
+});
+
+// UPDATE INSTRUCTION FROM RECIPE
+router.put('/recipes/:recipe_id/instructions/:ins_id', authenticate,  (req, res) => {
+  const recipe_id = req.params.recipe_id;
+  const ins_id = req.params.ins_id;
+  const changes = req.body;
+
+  Recipes.getInstructionByIdByRecipeId(recipe_id, ins_id)
+  .then(ins => {
+    if (ins) {
+      Recipes.updateInstruction(changes, ins_id)
+      .then(updatedIng => {
+        res.json(updatedIng);
+      });
+    } else {
+      res.status(404).json({ message: `Could not update instruction ${ins_id} in recipe ${recipe_id}.` })
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: `Failed to update this instruction ${ins_id} in recipe ${recipe_id}` });
+  });
+});
+
+// DELETE INSTRUCTION FROM RECIPE
+router.put('/recipes/:recipe_id/instructions/:ins_id', authenticate,  (req, res) => {
+  const recipe_id = req.params.recipe_id;
+  const ins_id = req.params.ins_id;
+
+  Recipes.getInstructionByIdByRecipeId(recipe_id, ins_id)
+  .then(ins => {
+    if (ins) {
+      Recipes.removeInstruction(ins_id)
+      .then(deletedIng => {
+        res.json(deletedIng);
+      });
+    } else {
+      res.status(404).json({ message: `Could not delete instruction ${ins_id} in recipe ${recipe_id}.` })
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: `Failed to delete this instruction ${ins_id} in recipe ${recipe_id}` });
+  });
+});
+
+// GET INSTRUCTIONS FROM RECIPE
 router.get('/recipes/:id/instructions', (req, res) => {
   const { id } = req.params;
 
