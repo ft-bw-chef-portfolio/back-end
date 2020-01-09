@@ -47,18 +47,23 @@ router.post('/recipes', authenticate, (req, res) => {
       .insert(newRecipe, 'id')
       .into('recipes')
       .then(function(ids) {
-        ingredients.forEach((ingredient) => ingredient.recipe_id = ids[0]);
-        // console.log('ingredients', ingredients)
-        return trx('ingredients').insert(ingredients);
+        if (ingredients) {
+          ingredients.forEach((ingredient) => ingredient.recipe_id = ids[0]);
+          return trx('ingredients').insert(ingredients);
+        } else if (instructions) {
+          instructions.forEach((instruction) => instruction.recipe_id = ids[0]);
+          return trx('instructions').insert(instructions);              
+        }
       })
       .then(function(ids) {
-        instructions.forEach((instruction) => instruction.recipe_id = ingredients.map(ing => ing.recipe_id)[0]);
-        // console.log('ingredients', ingredients)
-        return trx('instructions').insert(instructions);              
+        if (instructions && ingredients) {
+          instructions.forEach((instruction) => instruction.recipe_id = ingredients.map(ing => ing.recipe_id)[0]);
+          return trx('instructions').insert(instructions);              
+        }
       })
   })
   .then(function(inserts) {
-    console.log(inserts.length + ' new ingredients saved.');
+    // console.log(inserts.length + ' new ingredients saved.');
     res.json({message: 'new recipe created'});
   })
   .catch(function(error) {

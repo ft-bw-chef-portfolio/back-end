@@ -1,4 +1,4 @@
-const request = require("supertest");
+const supertest = require("supertest");
 
 const server = require("./server.js");
 
@@ -12,17 +12,17 @@ describe("server.js", function() {
   describe("GET /", function() {
     it("should return a 200 OK", function() {
       // spin up the server
-      return request(server)
+      return supertest(server)
         .get("/")
         .then(res => {
           expect(res.status).toBe(200);
         });
-      // make GET request to /
+      // make GET supertest to /
       // look at the http status code for the response
     });
 
     it("should return a JSON", function() {
-      return request(server)
+      return supertest(server)
         .get("/")
         .then(res => {
           expect(res.type).toMatch(/json/i);
@@ -30,7 +30,7 @@ describe("server.js", function() {
     });
 
     it("should return {api: 'up'}", function() {
-      return request(server)
+      return supertest(server)
         .get("/")
         .then(res => {
           expect(res.body.api).toBe("up");
@@ -38,13 +38,13 @@ describe("server.js", function() {
     });
 
     it("auth example", function() {
-      return request(server)
+      return supertest(server)
         .post("/api/auth/login")
         .send({ username: "ignaciosm", password: "test1234" })
         .then(res => {
           const token = res.body.token;
 
-          return request(server)
+          return supertest(server)
             .get("/")
             .set("Authorization", token)
             .then(res => {
