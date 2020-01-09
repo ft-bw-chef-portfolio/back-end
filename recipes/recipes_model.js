@@ -6,6 +6,7 @@ module.exports = {
   getChefs,
   getMealTypes,
   getRecipesById,
+  getRecipesByChefId,
   getIngredientsByRecipeId,
   getInstructionsByRecipeId,
   // getIngredients,
@@ -56,6 +57,13 @@ function getIngredientsByRecipeId(id) {
   return db("ingredients as ing")
   .select('ing.id', 'ing.name')
   .where('ing.recipe_id', id);
+}
+getRecipesByChefId
+
+function getRecipesByChefId(id) {
+  return db("recipes as r")
+  // .select(*)
+  .where('r.chef_id', id);
 }
 
 function getInstructionsByRecipeId(id) {

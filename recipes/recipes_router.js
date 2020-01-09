@@ -88,6 +88,23 @@ router.get('/chefs', (req, res) => {
   });
 });
 
+router.get('/chefs/:id/recipes', (req, res) => {
+  const { id } = req.params;
+
+  Recipes.getRecipesByChefId(id)
+  .then(recipes => {
+    if (recipes) {
+      res.json(recipes);
+    } else {
+      res.status(404).json({ message: 'Could not find recipe with given id.' })
+    }
+  })
+  .catch(err => {
+    res.status(500).json({ message: 'Failed to get recipes' });
+  });
+});
+
+
 router.get('/meal_types', (req, res) => {
   Recipes.getMealTypes()
   .then(mealtypes => {
